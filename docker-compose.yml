@@ -1,0 +1,11 @@
+services:
+  deep-research:
+    build: .
+    container_name: deep-research-agent
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8000"
+    ports:
+      - "8000:8000"

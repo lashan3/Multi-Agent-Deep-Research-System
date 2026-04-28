@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deep-research-agent"
+version = "0.1.0"
+description = "A multi-agent ReAct research system that produces fully-cited reports with auto-generated charts."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Muhammad Lashan Ali Zahid" }]
+keywords = [
+    "ai-agent",
+    "research",
+    "react",
+    "llm",
+    "perplexity",
+    "claude",
+    "openai",
+    "rag",
+    "fastapi",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pydantic>=2.5",
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+deep-research = "deep_research.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/lashan3/deep-research-agent"
+Repository = "https://github.com/lashan3/deep-research-agent"
+Issues = "https://github.com/lashan3/deep-research-agent/issues"
+
+[tool.setuptools]
+packages = ["deep_research", "deep_research.server"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"deep_research.server" = ["static/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

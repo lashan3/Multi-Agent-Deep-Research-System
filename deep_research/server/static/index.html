@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deep Research Agent</title>
+    <meta
+      name="description"
+      content="Multi-agent ReAct research with cited reports."
+    />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Markdown / Highlight / Mermaid (CDN, no build step) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@11/styles/github-dark.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11/lib/common.min.js"></script>
+
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+
+  <body data-theme="dark">
+    <header class="header">
+      <div class="header__brand">
+        <svg
+          class="header__logo"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2" />
+          <path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <circle cx="11" cy="11" r="2.5" fill="currentColor" />
+        </svg>
+        <h1 class="header__title">Deep Research Agent</h1>
+      </div>
+      <div class="header__actions">
+        <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+        <button id="themeBtn" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+          <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <a
+          class="icon-btn"
+          href="https://github.com/lashan3/deep-research-agent"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="GitHub"
+          aria-label="GitHub"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.4-.5-1.6.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>
+        </a>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="hero" id="hero">
+        <h2 class="hero__title">Ask anything. Get a cited report.</h2>
+        <p class="hero__subtitle">
+          A team of LLMs plans, searches, reads sources, builds charts, and writes a
+          publication-ready markdown report — all from one prompt.
+        </p>
+        <div class="examples">
+          <button class="example-chip" data-example="Compare GPT-4o and Claude Sonnet for production coding work in 2024–2025">
+            Compare GPT-4o vs Claude for coding
+          </button>
+          <button class="example-chip" data-example="What are the main barriers to enterprise AI adoption in EU manufacturing, and how are leaders overcoming them?">
+            EU manufacturing AI adoption barriers
+          </button>
+          <button class="example-chip" data-example="How has private equity investment in UK fintech evolved between 2021 and 2025? Include deal volumes and sector breakdown.">
+            UK fintech PE investment 2021–2025
+          </button>
+          <button class="example-chip" data-example="Identify the most significant developments in quantum computing in 2024–2025.">
+            Quantum computing 2024–2025
+          </button>
+        </div>
+      </section>
+
+      <form id="queryForm" class="query-form">
+        <div class="query-form__wrap">
+          <textarea
+            id="queryInput"
+            class="query-form__input"
+            placeholder="Type a research question and press Enter…"
+            rows="2"
+            autocomplete="off"
+            spellcheck="false"
+          ></textarea>
+          <button id="submitBtn" type="submit" class="query-form__submit" aria-label="Submit">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+        <div id="statusBar" class="status-bar" aria-live="polite"></div>
+      </form>
+
+      <section id="output" class="output" aria-live="polite"></section>
+    </main>
+
+    <!-- Settings drawer -->
+    <aside id="settingsPanel" class="drawer" aria-hidden="true">
+      <div class="drawer__header">
+        <h3>Settings</h3>
+        <button id="settingsClose" class="icon-btn" aria-label="Close settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="drawer__body">
+        <p class="drawer__hint">
+          These overrides apply to the next research run only. Server-side defaults
+          (set via environment variables) are used when fields are blank.
+        </p>
+
+        <label class="field">
+          <span class="field__label">Brain model</span>
+          <input type="text" id="brainModel" placeholder="e.g. anthropic/claude-sonnet-4-5" />
+        </label>
+        <label class="field">
+          <span class="field__label">Fast model</span>
+          <input type="text" id="fastModel" placeholder="e.g. google/gemini-2.5-flash" />
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span class="field__label">Max steps</span>
+            <input type="number" id="maxSteps" min="1" max="100" placeholder="30" />
+          </label>
+          <label class="field">
+            <span class="field__label">Max reads</span>
+            <input type="number" id="maxReads" min="0" max="100" placeholder="25" />
+          </label>
+          <label class="field">
+            <span class="field__label">Max charts</span>
+            <input type="number" id="maxCharts" min="0" max="20" placeholder="4" />
+          </label>
+        </div>
+
+        <label class="field field--check">
+          <input type="checkbox" id="allowClarify" checked />
+          <span>Allow clarifying questions before research</span>
+        </label>
+      </div>
+    </aside>
+    <div id="drawerScrim" class="drawer-scrim" aria-hidden="true"></div>
+
+    <!-- Mermaid (loaded after marked) -->
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "dark",
+        securityLevel: "loose",
+        fontFamily: "Inter, system-ui, sans-serif",
+      });
+      window.__mermaid = mermaid;
+    </script>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
