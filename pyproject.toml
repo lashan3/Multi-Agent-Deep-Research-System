@@ -48,9 +48,9 @@ dev = [
 deep-research = "deep_research.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/lashan3/deep-research-agent"
-Repository = "https://github.com/lashan3/deep-research-agent"
-Issues = "https://github.com/lashan3/deep-research-agent/issues"
+Homepage = "https://github.com/lashan3/Multi-Agent-Deep-Research-System"
+Repository = "https://github.com/lashan3/Multi-Agent-Deep-Research-System"
+Issues = "https://github.com/lashan3/Multi-Agent-Deep-Research-System/issues"
 
 [tool.setuptools]
 packages = ["deep_research", "deep_research.server"]

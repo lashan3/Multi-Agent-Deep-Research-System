@@ -95,7 +95,7 @@ Read the long-form architecture write-up: [`docs/architecture.md`](docs/architec
 ### Docker (one command)
 
 ```bash
-git clone https://github.com/lashan3/deep-research-agent.git
+git clone https://github.com/lashan3/Multi-Agent-Deep-Research-System.git
 cd deep-research-agent
 cp .env.example .env
 # edit .env — set OPENAI_API_KEY and PERPLEXITY_API_KEY
@@ -107,7 +107,7 @@ Open <http://localhost:8000>.
 ### Manual install
 
 ```bash
-git clone https://github.com/lashan3/deep-research-agent.git
+git clone https://github.com/lashan3/Multi-Agent-Deep-Research-System.git
 cd deep-research-agent
 
 python -m venv .venv
