@@ -254,6 +254,16 @@ a:hover {
   cursor: not-allowed;
 }
 
+/* Stop variant — same button, swapped icon + red background while a run is in flight. */
+.query-form__submit.is-stop {
+  background: var(--danger);
+}
+.query-form__submit.is-stop:hover:not(:disabled) {
+  background: var(--danger);
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
 .status-bar {
   margin: 8px 4px 0;
   font-size: 13px;

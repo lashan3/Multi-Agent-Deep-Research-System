@@ -16,8 +16,9 @@ Two stages:
 from __future__ import annotations
 
 import json
+import threading
 import time
-from typing import Generator
+from typing import Generator, Optional
 
 import requests
 
@@ -33,11 +34,18 @@ def write_report(
     base_url: str,
     brain_model: str,
     brain_timeout: int,
+    cancel_event: Optional[threading.Event] = None,
 ) -> Generator[str, None, None]:
     """Top-level: build outline, then stream the report with chart injection."""
     brief = notebook.synthesis_brief()
+    if cancel_event is not None and cancel_event.is_set():
+        return
     outline = _build_outline(brief, api_key, base_url, brain_model, brain_timeout)
-    yield from _write_sections(brief, outline, api_key, base_url, brain_model, notebook)
+    if cancel_event is not None and cancel_event.is_set():
+        return
+    yield from _write_sections(
+        brief, outline, api_key, base_url, brain_model, notebook, cancel_event
+    )
 
 
 # =============================================================================
@@ -137,6 +145,7 @@ def _write_sections(
     base_url: str,
     model: str,
     notebook: ResearchNotebook,
+    cancel_event: Optional[threading.Event] = None,
 ) -> Generator[str, None, None]:
     query = brief.get("query", "")
     query_type = brief.get("query_type", "open-ended")
@@ -171,7 +180,7 @@ def _write_sections(
                 max_tokens=20000,
                 timeout=400,
             )
-            yield from _inject_charts(raw_stream, notebook)
+            yield from _inject_charts(raw_stream, notebook, cancel_event)
             return
         except (requests.Timeout, requests.ConnectionError) as exc:
             if stream_attempt < max_stream_retries - 1:
@@ -195,7 +204,9 @@ MAX_CHART_ID_LEN = 20
 
 
 def _inject_charts(
-    stream: Generator[str, None, None], notebook: ResearchNotebook
+    stream: Generator[str, None, None],
+    notebook: ResearchNotebook,
+    cancel_event: Optional[threading.Event] = None,
 ) -> Generator[str, None, None]:
     """Wrap a text stream and replace `{{CHART:cht_xxx}}` with actual chart code.
 
@@ -204,11 +215,13 @@ def _inject_charts(
       artifact by the UI).
 
     Handles placeholders that span across stream chunks by buffering at
-    potential placeholder boundaries.
+    potential placeholder boundaries. Honours `cancel_event` between chunks.
     """
     buffer = ""
 
     for chunk in stream:
+        if cancel_event is not None and cancel_event.is_set():
+            return
         buffer += chunk
 
         while True:

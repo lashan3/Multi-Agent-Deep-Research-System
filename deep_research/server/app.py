@@ -11,11 +11,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -65,12 +66,17 @@ def index() -> FileResponse:
 
 
 @app.post("/api/research")
-async def research(payload: ResearchRequest):
+async def research(request: Request, payload: ResearchRequest):
     """Stream a research run as Server-Sent Events.
 
     Each event is a JSON object: `{"type": "chunk", "content": "..."}` or
     `{"type": "done"}` at the end. Errors are streamed as
     `{"type": "error", "content": "..."}` followed by `done`.
+
+    If the client disconnects (e.g. user clicks Stop), the SSE generator
+    sets a shared `cancel_event` that the agent checks at each phase /
+    ReAct iteration boundary, so the LLM calls actually stop — not just
+    the streaming UI.
     """
     config = Config(
         brain_model=payload.brain_model,
@@ -94,11 +100,14 @@ async def research(payload: ResearchRequest):
     agent = DeepResearchAgent(config)
     queue: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
+    cancel_event = threading.Event()
 
     def _produce() -> None:
         try:
             for chunk in agent.research(
-                payload.query, allow_clarification=payload.allow_clarification
+                payload.query,
+                allow_clarification=payload.allow_clarification,
+                cancel_event=cancel_event,
             ):
                 asyncio.run_coroutine_threadsafe(
                     queue.put({"type": "chunk", "content": chunk}), loop
@@ -114,7 +123,16 @@ async def research(payload: ResearchRequest):
 
     async def _events():
         while True:
-            event = await queue.get()
+            # Detect client disconnect (e.g. user clicked Stop) and signal
+            # the agent thread to wind down. We poll on a 0.5s queue timeout
+            # so disconnects are caught quickly without busy-waiting.
+            if await request.is_disconnected():
+                cancel_event.set()
+                break
+            try:
+                event = await asyncio.wait_for(queue.get(), timeout=0.5)
+            except asyncio.TimeoutError:
+                continue
             yield f"data: {json.dumps(event)}\n\n"
             if event.get("type") == "done":
                 break

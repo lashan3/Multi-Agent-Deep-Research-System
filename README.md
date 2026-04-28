@@ -23,30 +23,13 @@ Think *“hire a research analyst for 20 minutes”* rather than *“ask a chatb
 
 ## Demo
 
-> Drop a screenshot or GIF here once you've run the web UI. The recommended grab is the streaming `<think>` block + the final report with an inline Mermaid chart.
+![Deep Research Agent — landing page](docs/hero.png)
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Deep Research Agent                                  ⚙ 🌙   │
-├──────────────────────────────────────────────────────────────┤
-│  Ask anything…                                               │
-│  > Compare GPT-4o vs Claude Sonnet for production coding     │
-│                                                       [Send] │
-├──────────────────────────────────────────────────────────────┤
-│  ▼ Thinking (12 steps · 6 sources · 1 chart)                 │
-│      Searching: "GPT-4o HumanEval benchmark 2024"            │
-│      Reading: arxiv.org/abs/2406.04692 — 8 findings          │
-│      Generating chart: Model Benchmark Comparison            │
-│  ───────────────────────────────────────────────────────     │
-│  # GPT-4o vs Claude Sonnet for Production Coding             │
-│                                                              │
-│  ## Executive Summary                                        │
-│  Both models score within 1pp on HumanEval (~92%) [1][2]…   │
-│                                                              │
-│  ┌─ Mermaid bar chart rendered inline ─┐                    │
-│  └────────────────────────────────────────┘                  │
-└──────────────────────────────────────────────────────────────┘
-```
+A four-phase ReAct loop runs Claude Sonnet through query understanding → planning → research → report writing. Every tool call streams live in a collapsible thinking section before the final cited report renders below.
+
+| Streaming research | Final cited report |
+|---|---|
+| ![Streaming research](docs/streaming.png) | ![Final cited report](docs/report1.png) |
 
 ---
 

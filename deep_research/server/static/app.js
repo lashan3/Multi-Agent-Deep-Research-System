@@ -130,6 +130,32 @@
   let reportEl = null;
   let abortController = null;
 
+  // Send / Stop button states — same button toggles between submitting a new
+  // query and aborting the in-flight one.
+  const SEND_SVG_INNER =
+    '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>';
+  const STOP_SVG_INNER =
+    '<rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor" stroke="none"/>';
+
+  function setRunning(yes) {
+    const svg = submitBtn.querySelector("svg");
+    if (yes) {
+      submitBtn.classList.add("is-stop");
+      submitBtn.setAttribute("aria-label", "Stop");
+      submitBtn.title = "Stop research";
+      if (svg) svg.innerHTML = STOP_SVG_INNER;
+      submitBtn.disabled = false;
+      input.disabled = true;
+    } else {
+      submitBtn.classList.remove("is-stop");
+      submitBtn.setAttribute("aria-label", "Submit");
+      submitBtn.title = "Run research";
+      if (svg) svg.innerHTML = SEND_SVG_INNER;
+      submitBtn.disabled = false;
+      input.disabled = false;
+    }
+  }
+
   function newThinkBlock() {
     thinkEl = document.createElement("div");
     thinkEl.className = "think open";
@@ -253,7 +279,7 @@
 
   async function runResearch(query) {
     abortController = new AbortController();
-    submitBtn.disabled = true;
+    setRunning(true);
     statusBar.classList.remove("is-error");
     statusBar.textContent = "Connecting…";
     main.classList.add("main--running");
@@ -318,13 +344,20 @@
         statusBar.classList.add("is-error");
       }
     } finally {
-      submitBtn.disabled = false;
+      setRunning(false);
       abortController = null;
     }
   }
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    // While a run is in flight the same button acts as a Stop button —
+    // abort the fetch (which closes the SSE stream and signals the server
+    // to cancel the in-flight LLM calls).
+    if (submitBtn.classList.contains("is-stop")) {
+      abortController?.abort();
+      return;
+    }
     const q = input.value.trim();
     if (!q) return;
     runResearch(q);

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 from typing import Generator, List, Optional, Union
 
 from deep_research import react_tools, report_writer
@@ -66,6 +67,7 @@ class DeepResearchAgent:
         *,
         allow_clarification: bool = True,
         conversation: Optional[List[dict]] = None,
+        cancel_event: Optional[threading.Event] = None,
     ) -> Generator[str, None, None]:
         """Run the full research pipeline and stream the markdown report.
 
@@ -78,11 +80,17 @@ class DeepResearchAgent:
                 sent to the understanding LLM in a previous run, e.g. when
                 the user is answering clarifying questions). Internal-ish —
                 most callers won't need this.
+            cancel_event: optional threading.Event. When set, the agent stops
+                cleanly at the next phase or ReAct iteration boundary.
         """
         try:
-            yield from self._run(query, allow_clarification, conversation)
+            yield from self._run(query, allow_clarification, conversation, cancel_event)
         except Exception as e:
             yield f"\n\n**Pipeline error:** {e}\n"
+
+    @staticmethod
+    def _is_cancelled(cancel_event: Optional[threading.Event]) -> bool:
+        return cancel_event is not None and cancel_event.is_set()
 
     # ────────────────────────────────────────────────────────────────
     # Internal — full pipeline
@@ -93,6 +101,7 @@ class DeepResearchAgent:
         query: str,
         allow_clarification: bool,
         conversation: Optional[List[dict]],
+        cancel_event: Optional[threading.Event] = None,
     ) -> Generator[str, None, None]:
         c = self.config
 
@@ -110,6 +119,10 @@ class DeepResearchAgent:
             from deep_research.notebook import QueryUnderstanding
 
             understanding = QueryUnderstanding(initial_subquestions=[query])
+
+        if self._is_cancelled(cancel_event):
+            yield "\n\n_[Cancelled]_\n"
+            return
 
         # Optional clarification gate
         if (
@@ -158,6 +171,10 @@ class DeepResearchAgent:
         if plan_text:
             yield f"Research plan:\n{plan_text}\n\n"
 
+        if self._is_cancelled(cancel_event):
+            yield "\n</think>\n\n_[Cancelled]_\n"
+            return
+
         # ── Phase 2: ReAct loop ─────────────────────────────────────
         yield "---\n\n"
         done = False
@@ -183,6 +200,12 @@ class DeepResearchAgent:
 
         step = 0
         while not budget.exhausted() and not done:
+            if self._is_cancelled(cancel_event):
+                notebook.stop_reason = "cancelled"
+                yield "\n_[Cancelled]_\n"
+                yield "</think>\n\n"
+                return
+
             step += 1
             budget.record_step()
 
@@ -304,6 +327,10 @@ class DeepResearchAgent:
         if notebook.stop_reason and "error" in notebook.stop_reason:
             yield "_Note: Research encountered an error and may be incomplete._\n\n"
 
+        if self._is_cancelled(cancel_event):
+            yield "_[Cancelled]_\n"
+            return
+
         # ── Phase 3: Report ─────────────────────────────────────────
         yield "**Writing report...**\n\n"
         try:
@@ -313,6 +340,7 @@ class DeepResearchAgent:
                 base_url=c.openai_base_url,
                 brain_model=c.brain_model,
                 brain_timeout=c.brain_timeout,
+                cancel_event=cancel_event,
             )
         except Exception as e:
             yield f"\n**Report generation error:** {e}\n"
